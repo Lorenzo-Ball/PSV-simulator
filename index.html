@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>PSV Interactive Simulator - Copyright 2026 Lorenzo Ball Università degli Studi di Genova</title>
+  <link rel="stylesheet" href="PSV_web_simulator.css">
+  <script defer src="PSV_web_simulator.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <img class="unige-logo" src="unige_logo_orizzontale_colore.png" alt="Università degli Studi di Genova">
+        <div class="brand-copy">
+          <div class="brand-kicker">Università degli Studi di Genova</div>
+          <div class="brand-title">PSV Interactive Simulator</div>
+          <div class="brand-subtitle">Copyright 2026 Lorenzo Ball Università degli Studi di Genova</div>
+        </div>
+      </div>
+      <div class="run-bar">
+        <button class="primary" id="startBtn" type="button">Start</button>
+        <button id="pauseBtn" type="button">Pause</button>
+        <button id="resetBtn" type="button">Reset</button>
+        <button id="exportBtn" type="button">Export CSV</button>
+      </div>
+      <div class="status-pill" id="runStatus">Paused</div>
+    </header>
+
+    <main class="workspace">
+      <section class="plot-panel">
+        <div class="plot-header">
+          <div>
+            <h1>Real-time waveforms</h1>
+            <p>Dashed blue lines mark ventilator trigger; dashed orange lines mark cycling-off.</p>
+          </div>
+          <div class="legend">
+            <span><i class="dot paw"></i>Paw</span>
+            <span><i class="dot flow"></i>Flow</span>
+            <span><i class="dot pes"></i>Pes</span>
+          </div>
+        </div>
+        <div class="plot-stack" id="plotStack" aria-label="PSV waveform panel"></div>
+      </section>
+
+      <aside class="control-panel">
+        <div class="tabs" id="tabs">
+          <button class="tab active" data-tab="vent" type="button">Vent</button>
+          <button class="tab" data-tab="patient" type="button">Patient</button>
+          <button class="tab" data-tab="effort" type="button">Effort</button>
+          <button class="tab" data-tab="maneuvers" type="button">Occlusion</button>
+          <button class="tab" data-tab="presets" type="button">Presets</button>
+          <button class="tab" data-tab="sim" type="button">Sim</button>
+        </div>
+
+        <div class="tab-pages">
+          <section class="tab-page active" data-page="vent">
+            <h2>Ventilator</h2>
+            <div class="control-list">
+              <label class="slider-row">
+                <span>PEEP</span>
+                <input data-path="vent.peep" data-format="%.1f cmH2O" type="range" min="0" max="20" step="0.1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Pressure support</span>
+                <input data-path="vent.ps" data-format="%.1f cmH2O" type="range" min="0" max="30" step="0.1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Flow trigger</span>
+                <input data-path="vent.triggerFlowLmin" data-format="%.1f L/min" type="range" min="0.2" max="10" step="0.1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>ETS cycling</span>
+                <input data-path="vent.ets" data-format="%.0f %" type="range" min="5" max="80" step="1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Rise time</span>
+                <input data-path="vent.riseMs" data-format="%.0f ms" type="range" min="20" max="500" step="5">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Vent leak</span>
+                <input data-path="vent.leakLmin" data-format="%.0f L/min" type="range" min="0" max="80" step="1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Backup rate</span>
+                <input data-path="vent.backupRate" data-format="%.0f bpm" type="range" min="6" max="25" step="1">
+                <output></output>
+              </label>
+              <label class="check-row">
+                <input data-path="vent.backupOn" type="checkbox">
+                <span>Backup ventilation</span>
+              </label>
+            </div>
+          </section>
+
+          <section class="tab-page" data-page="patient">
+            <h2>Patient</h2>
+            <div class="control-list">
+              <label class="slider-row">
+                <span>CRS</span>
+                <input data-path="patient.crs" data-format="%.0f mL/cmH2O" type="range" min="15" max="120" step="1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Rrs</span>
+                <input data-path="patient.rrs" data-format="%.1f cmH2O/L/s" type="range" min="2" max="30" step="0.1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>FRC</span>
+                <input data-path="patient.frc" data-format="%.1f L" type="range" min="1" max="4.5" step="0.1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Auto-PEEP</span>
+                <input data-path="patient.autoPeep" data-format="%.1f cmH2O" type="range" min="0" max="15" step="0.1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Patient leak</span>
+                <input data-path="patient.leakLmin" data-format="%.0f L/min" type="range" min="0" max="80" step="1">
+                <output></output>
+              </label>
+            </div>
+          </section>
+
+          <section class="tab-page" data-page="effort">
+            <h2>Respiratory effort</h2>
+            <div class="control-list">
+              <label class="slider-row">
+                <span>Neural RR</span>
+                <input data-path="effort.rr" data-format="%.0f bpm" type="range" min="4" max="45" step="1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>DeltaPes</span>
+                <input data-path="effort.deltaPes" data-format="%.1f cmH2O" type="range" min="1" max="30" step="0.1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Neural Ti</span>
+                <input data-path="effort.ti" data-format="%.2f s" type="range" min="0.30" max="2.20" step="0.01">
+                <output></output>
+              </label>
+              <label class="select-row">
+                <span>Effort shape</span>
+                <select data-path="effort.shape">
+                  <option>Sinusoidal</option>
+                  <option>Trapezoidal</option>
+                  <option>Smooth ramp</option>
+                </select>
+              </label>
+              <label class="select-row">
+                <span>Effort preset</span>
+                <select data-path="effort.strength">
+                  <option>Weak</option>
+                  <option>Normal</option>
+                  <option>Strong</option>
+                </select>
+              </label>
+            </div>
+          </section>
+
+          <section class="tab-page" data-page="maneuvers">
+            <h2>Occlusion maneuvers</h2>
+            <div class="button-grid">
+              <button data-maneuver="P01" type="button">Inspiratory occlusion / P0.1</button>
+              <button data-maneuver="DPOCC" type="button">Expiratory occlusion / DeltaPocc</button>
+              <button data-maneuver="MIF" type="button">Maximum inspiratory force / MIF</button>
+              <button data-maneuver="PMI" type="button">Pressure muscle index / PMI</button>
+            </div>
+            <div class="hint-box" id="maneuverStatus">Pending: none</div>
+          </section>
+
+          <section class="tab-page" data-page="presets">
+            <h2>Presets</h2>
+            <div class="button-grid compact">
+              <button data-preset="Normal PSV" type="button">Normal PSV</button>
+              <button data-preset="Overassistance" type="button">Overassistance</button>
+              <button data-preset="Underassistance" type="button">Underassistance</button>
+              <button data-preset="Ineffective effort" type="button">Ineffective effort</button>
+              <button data-preset="Premature cycling" type="button">Premature cycling</button>
+              <button data-preset="Delayed cycling" type="button">Delayed cycling</button>
+              <button data-preset="Auto-trigger / leak" type="button">Auto-trigger / leak</button>
+            </div>
+          </section>
+
+          <section class="tab-page" data-page="sim">
+            <h2>Simulation settings</h2>
+            <div class="control-list">
+              <label class="slider-row">
+                <span>Sim-time ratio</span>
+                <input data-sim="timeRatio" data-format="%.1f x" type="range" min="0.5" max="8" step="0.1">
+                <output></output>
+              </label>
+              <label class="slider-row">
+                <span>Window</span>
+                <input data-sim="displayWindow" data-format="%.0f s" type="range" min="8" max="45" step="1">
+                <output></output>
+              </label>
+              <div class="curve-toggles">
+                <label><input data-curve="paw" type="checkbox"> Paw</label>
+                <label><input data-curve="flow" type="checkbox"> Flow</label>
+                <label><input data-curve="volume" type="checkbox"> Volume</label>
+                <label><input data-curve="pes" type="checkbox"> Pes</label>
+                <label><input data-curve="pmus" type="checkbox"> Pmus equivalent</label>
+                <label><input data-curve="state" type="checkbox"> Ventilator state</label>
+              </div>
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      <section class="metrics-panel">
+        <h2>Values</h2>
+        <div class="metric-grid" id="metricGrid">
+          <div><span>VT current</span><strong data-metric="vtMl">--</strong></div>
+          <div><span>RR ventilator</span><strong data-metric="rrVent">--</strong></div>
+          <div><span>RR neural</span><strong data-metric="rrNeural">--</strong></div>
+          <div><span>Ti ventilator</span><strong data-metric="tiVent">--</strong></div>
+          <div><span>Ti neural</span><strong data-metric="tiNeural">--</strong></div>
+          <div><span>Peak flow</span><strong data-metric="flowPeak">--</strong></div>
+          <div><span>Pes swing</span><strong data-metric="pesSwing">--</strong></div>
+          <div><span>P0.1</span><strong data-metric="p01">--</strong></div>
+          <div><span>DeltaPocc</span><strong data-metric="dpocc">--</strong></div>
+          <div><span>MIF / NIF</span><strong data-metric="mif">--</strong></div>
+          <div><span>PMI proxy</span><strong data-metric="pmi">--</strong></div>
+          <div><span>Effort proxy</span><strong data-metric="effortProxy">--</strong></div>
+          <div><span>State</span><strong data-metric="stateText">--</strong></div>
+        </div>
+
+        <h2>Event log</h2>
+        <div class="event-log" id="eventLog">Ready</div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
